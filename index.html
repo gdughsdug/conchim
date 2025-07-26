@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YÊU NHẤT TRÊN ĐỜI</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f4f4;
+      transition: background 2s ease;
+      overflow: hidden;
+    }
+    body.romantic {
+      background: url('https://hoanghamobile.com/tin-tuc/wp-content/uploads/2023/08/hinh-nen-trai-tim.jpg') no-repeat center center;
+      background-size: cover;
+    }
+    .captcha-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      padding: 10px;
+      width: 300px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+    .captcha-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .check-wrapper {
+      width: 20px;
+      height: 20px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .captcha-left label {
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .captcha-left input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+    }
+    .captcha-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 10px;
+      color: #666;
+    }
+    .captcha-logo {
+      width: 24px;
+      height: 24px;
+      background: url('https://www.gstatic.com/recaptcha/api2/logo_48.png') no-repeat center;
+      background-size: cover;
+    }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #ccc;
+      border-top: 2px solid #4285f4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      position: absolute;
+      display: none;
+    }
+    .checkmark {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      background-color: #4CAF50;
+      display: none;
+      position: absolute;
+    }
+    .checkmark:after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 0px;
+      width: 5px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Text animation */
+    .love-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+      font-family: 'Brush Script MT', cursive;
+      font-size: 2em;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+      display: none;
+    }
+    .love-line {
+      opacity: 0;
+      animation: fadeIn 1.5s ease forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .petal {
+  position: fixed;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  background-image: url('https://png.pngtree.com/png-clipart/20240528/original/pngtree-peach-blossom-vector-png-image_15193597.png');
+  background-size: cover;
+  pointer-events: none;
+  opacity: 0.8;
+  will-change: transform;
+}
+
+  @keyframes fall {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(110vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  </style>
+</head>
+<body>
+  <div class="captcha-container" id="captchaBox">
+    <div class="captcha-left">
+      <div class="check-wrapper">
+        <input type="checkbox" id="verify">
+        <div class="spinner" id="loading"></div>
+        <div class="checkmark" id="checked"></div>
+      </div>
+      <label for="verify">Tôi Không Phải Là Con Người</label>
+    </div>
+    <div class="captcha-right">
+      <div class="captcha-logo"></div>
+      <div>reCAPTCHA</div>
+      <a href="#" style="color:#666; text-decoration:none;">Privacy - Terms</a>
+    </div>
+  </div>
+
+  <div class="love-text" id="loveMessage"></div>
+
+  <audio id="loveSong" loop>
+    <source src="https://firebasestorage.googleapis.com/v0/b/nhachay-43b11.appspot.com/o/Y2meta.app%20-%20I%20LOVE%20YOU%20BABY%20(Mood%20Edit%20Love)%20(320%20kbps).mp3?alt=media&token=9b080695-2748-49a1-a83d-211d6c3abdf1" type="audio/mpeg">
+  </audio>
+
+<script>
+  const checkbox = document.getElementById("verify");
+  const spinner = document.getElementById("loading");
+  const checkmark = document.getElementById("checked");
+  const captchaBox = document.getElementById("captchaBox");
+  const loveMessage = document.getElementById("loveMessage");
+  const loveSong = document.getElementById("loveSong");
+  const body = document.body;
+
+  const lines = [
+    "ANH YÊU EM ❤️",
+    "ANH YÊU EM NHIỀU LẮM ❤️",
+    "EM LÀ NGƯỜI TUYỆT VỜI NHẤT ❤️",
+    "EM LÀ THIÊN THẦN ❤️",
+    "CƯỚI EM ĐƯỢC KHÔNG ❤️",
+    "CUỘC ĐỜI CỦA ANH ❤️"
+  ];
+
+  function createPetal() {
+  const petal = document.createElement("div");
+  petal.classList.add("petal");
+  petal.style.left = Math.random() * window.innerWidth + "px";
+  petal.style.width = 15 + Math.random() * 15 + "px"; 
+  petal.style.height = petal.style.width;
+
+  const start = Date.now();
+  const startX = parseFloat(petal.style.left);
+  const drift = (Math.random() - 0.5) * 200; 
+  const duration = 7000 + Math.random() * 3000; 
+
+  function animate() {
+    const elapsed = Date.now() - start;
+    const progress = elapsed / duration;
+    if (progress > 1) {
+      petal.remove();
+      return;
+    }
+
+    const x = startX + Math.sin(progress * Math.PI * 2) * 50 + drift * progress;
+    const y = progress * (window.innerHeight + 50);
+    const rotate = progress * 360;
+
+    petal.style.transform = `translate(${x}px, ${y}px) rotate(${rotate}deg)`;
+    requestAnimationFrame(animate);
+  }
+
+  document.body.appendChild(petal);
+  requestAnimationFrame(animate);
+}
+
+  let petalInterval = null; 
+
+  let voices = [];
+speechSynthesis.onvoiceschanged = () => {
+  voices = speechSynthesis.getVoices();
+};
+
+function speak(text) {
+  const configs = [
+    { lang: 'ja-JP', pitch: 0.6 }, 
+    { lang: 'ko-KR', pitch: 0.5 }, 
+    { lang: 'zh-CN', pitch: 0.6 }, 
+    { lang: 'en-US', pitch: 0.5 }, 
+    { lang: 'vi-VN', pitch: 0.6 }  
+  ];
+
+  configs.forEach(cfg => {
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = cfg.lang;
+    msg.pitch = cfg.pitch;
+    msg.rate = 1.0;
+    msg.volume = 1;
+
+    let voice = voices.find(v => v.lang === cfg.lang) || voices.find(v => v.lang.startsWith(cfg.lang.split('-')[0]));
+    if (voice) msg.voice = voice;
+
+    speechSynthesis.speak(msg);
+  });
+}
+
+  function showLinesLoop() {
+    loveMessage.innerHTML = "";
+    let i = 0;
+    function nextLine() {
+      if (i < lines.length) {
+        const p = document.createElement("div");
+        p.className = "love-line";
+        p.textContent = lines[i];
+        loveMessage.appendChild(p);
+        speak(lines[i]);
+        setTimeout(nextLine, 3000);
+        i++;
+      } else {
+        setTimeout(() => {
+          loveMessage.innerHTML = "";
+          showLinesLoop();
+        }, 4000);
+      }
+    }
+    nextLine();
+  }
+
+  checkbox.addEventListener("change", function() {
+    if (this.checked) {
+      spinner.style.display = "block";
+      checkbox.style.display = "none";
+
+      setTimeout(() => {
+        spinner.style.display = "none";
+        checkmark.style.display = "block";
+
+        setTimeout(() => {
+          captchaBox.style.display = "none";
+          body.classList.add("romantic");
+          loveMessage.style.display = "block";
+          loveSong.play().catch(err => console.log("Autoplay bị chặn:", err));
+          showLinesLoop();
+
+          petalInterval = setInterval(createPetal, 300);
+
+        }, 800);
+
+      }, 2000);
+    }
+  });
+</script>
+</body>
+</html>
