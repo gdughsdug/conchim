@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
   <title>YÊU NHẤT TRÊN ĐỜI</title>
   <style>
     body {
@@ -22,17 +22,19 @@
       background-size: cover;
     }
     .captcha-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      padding: 10px;
-      width: 300px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 10;
-    }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 8px;            /* ✅ giảm padding cho mobile */
+  width: 90%;              /* ✅ đổi từ 300px sang 90% để co giãn */
+  max-width: 320px;        /* ✅ giữ giới hạn để không quá to trên desktop */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 10;
+  box-sizing: border-box;  /* ✅ đảm bảo padding không làm tràn khung */
+}
     .captcha-left {
       display: flex;
       align-items: center;
@@ -103,17 +105,23 @@
 
     /* Text animation */
     .love-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: white;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-      font-size: 2em;
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
-      display: none;
-    }
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #ffd700;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(18px, 4vw, 36px); /* ✅ Auto co giãn nhưng giới hạn min/max */
+  font-weight: 700;
+  text-shadow: 0 0 15px rgba(255,255,255,0.8);
+  display: none;
+  padding: 0 5%;
+  line-height: 1.3;
+  max-width: 80%; /* ✅ Không cho chữ vượt quá khung ảnh */
+  word-wrap: break-word;
+  box-sizing: border-box;
+}
     .love-line {
       opacity: 0;
       animation: fadeIn 1.5s ease forwards;
@@ -133,6 +141,19 @@
       opacity: 0.8;
       will-change: transform;
     }
+    @media (max-width: 768px) {
+  .love-text {
+    font-size: 7vw;  /* ✅ nhỏ hơn trên tablet */
+  }
+}
+
+@media (max-width: 480px) {
+  .love-text {
+    font-size: clamp(16px, 6vw, 28px); /* ✅ nhỏ hơn trên điện thoại */
+    max-width: 90%;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -177,11 +198,45 @@ const lines = [
 ];
 
 let voices = [];
-speechSynthesis.onvoiceschanged = () => {
-  voices = speechSynthesis.getVoices();
-};
 
-// ✅ Đọc cùng 5 ngôn ngữ
+// ✅ Chờ load voice đầy đủ (đặc biệt cần trên iOS)
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+  if (voices.length === 0) {
+    setTimeout(loadVoices, 300);
+  }
+}
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+// ✅ Map ngôn ngữ với voice ưu tiên cho iOS + Android
+function getSmartVoice(lang) {
+  const priorityVoices = {
+    'vi-VN': ['Vietnamese', 'vi-VN'],
+    'ko-KR': ['Yuna', 'ko-KR', 'Korean'],
+    'ja-JP': ['Kyoko', 'ja-JP', 'Japanese'],
+    'zh-CN': ['Ting-Ting', 'zh-CN', 'Chinese'],
+    'en-US': ['Samantha', 'en-US', 'English']
+  };
+
+  let candidates = priorityVoices[lang] || [];
+  let v = null;
+
+  // ✅ Lọc theo tên voice trước
+  for (let name of candidates) {
+    v = voices.find(voice => voice.name.includes(name) || voice.lang === name);
+    if (v) return v;
+  }
+
+  // ✅ Nếu không có, fallback voice cùng lang gốc
+  v = voices.find(voice => voice.lang === lang);
+  if (v) return v;
+
+  // ✅ Nếu vẫn không có, chọn voice đầu tiên để không bị im lặng
+  return voices[0] || null;
+}
+
+// ✅ Đọc 5 ngôn ngữ với lọc giọng thông minh
 function speakMulti(text) {
   const configs = [
     { lang: 'vi-VN', pitch: 0.6 },
@@ -190,13 +245,13 @@ function speakMulti(text) {
     { lang: 'zh-CN', pitch: 0.5 },
     { lang: 'en-US', pitch: 0.6 }
   ];
+
   configs.forEach(cfg => {
     const msg = new SpeechSynthesisUtterance(text);
     msg.lang = cfg.lang;
     msg.pitch = cfg.pitch;
     msg.rate = 1;
-    let v = voices.find(v => v.lang === cfg.lang) || voices.find(v => v.lang.startsWith(cfg.lang.split('-')[0]));
-    if (v) msg.voice = v;
+    msg.voice = getSmartVoice(cfg.lang);  // ✅ chọn voice thông minh
     speechSynthesis.speak(msg);
   });
 }
