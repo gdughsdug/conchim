@@ -123,27 +123,16 @@
       to { opacity: 1; transform: translateY(0); }
     }
     .petal {
-  position: fixed;
-  top: -10px;
-  width: 20px;
-  height: 20px;
-  background-image: url('https://png.pngtree.com/png-clipart/20240528/original/pngtree-peach-blossom-vector-png-image_15193597.png');
-  background-size: cover;
-  pointer-events: none;
-  opacity: 0.8;
-  will-change: transform;
-}
-
-  @keyframes fall {
-    0% {
-      transform: translateY(0) rotate(0deg);
-      opacity: 1;
+      position: fixed;
+      top: -10px;
+      width: 20px;
+      height: 20px;
+      background-image: url('https://png.pngtree.com/png-clipart/20240528/original/pngtree-peach-blossom-vector-png-image_15193597.png');
+      background-size: cover;
+      pointer-events: none;
+      opacity: 0.8;
+      will-change: transform;
     }
-    100% {
-      transform: translateY(110vh) rotate(360deg);
-      opacity: 0;
-    }
-  }
   </style>
 </head>
 <body>
@@ -170,35 +159,80 @@
   </audio>
 
 <script>
-  const checkbox = document.getElementById("verify");
-  const spinner = document.getElementById("loading");
-  const checkmark = document.getElementById("checked");
-  const captchaBox = document.getElementById("captchaBox");
-  const loveMessage = document.getElementById("loveMessage");
-  const loveSong = document.getElementById("loveSong");
-  const body = document.body;
+const checkbox = document.getElementById("verify");
+const spinner = document.getElementById("loading");
+const checkmark = document.getElementById("checked");
+const captchaBox = document.getElementById("captchaBox");
+const loveMessage = document.getElementById("loveMessage");
+const loveSong = document.getElementById("loveSong");
+const body = document.body;
 
-  const lines = [
-    "ANH YÊU EM ❤️",
-    "ANH YÊU EM NHIỀU LẮM ❤️",
-    "EM LÀ NGƯỜI TUYỆT VỜI NHẤT ❤️",
-    "EM LÀ THIÊN THẦN ❤️",
-    "CƯỚI EM ĐƯỢC KHÔNG ❤️",
-    "CUỘC ĐỜI CỦA ANH ❤️"
+const lines = [
+  "ANH YÊU EM ❤️",
+  "ANH YÊU EM NHIỀU LẮM ❤️",
+  "EM LÀ NGƯỜI TUYỆT VỜI NHẤT ❤️",
+  "EM LÀ THIÊN THẦN ❤️",
+  "CƯỚI EM ĐƯỢC KHÔNG ❤️",
+  "CUỘC ĐỜI CỦA ANH ❤️"
+];
+
+let voices = [];
+speechSynthesis.onvoiceschanged = () => {
+  voices = speechSynthesis.getVoices();
+};
+
+// ✅ Đọc cùng 5 ngôn ngữ
+function speakMulti(text) {
+  const configs = [
+    { lang: 'vi-VN', pitch: 1 },
+    { lang: 'ko-KR', pitch: 1 },
+    { lang: 'ja-JP', pitch: 1 },
+    { lang: 'zh-CN', pitch: 1 },
+    { lang: 'en-US', pitch: 1 }
   ];
+  configs.forEach(cfg => {
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = cfg.lang;
+    msg.pitch = cfg.pitch;
+    msg.rate = 1;
+    let v = voices.find(v => v.lang === cfg.lang) || voices.find(v => v.lang.startsWith(cfg.lang.split('-')[0]));
+    if (v) msg.voice = v;
+    speechSynthesis.speak(msg);
+  });
+}
 
-  function createPetal() {
+function showLinesLoop() {
+  loveMessage.innerHTML = "";
+  let i = 0;
+  function nextLine() {
+    if (i < lines.length) {
+      const p = document.createElement("div");
+      p.className = "love-line";
+      p.textContent = lines[i];
+      loveMessage.appendChild(p);
+      speakMulti(lines[i]);  // ✅ đọc đa ngôn ngữ
+      setTimeout(nextLine, 3000);
+      i++;
+    } else {
+      setTimeout(() => {
+        loveMessage.innerHTML = "";
+        showLinesLoop();
+      }, 4000);
+    }
+  }
+  nextLine();
+}
+
+function createPetal() {
   const petal = document.createElement("div");
   petal.classList.add("petal");
   petal.style.left = Math.random() * window.innerWidth + "px";
   petal.style.width = 15 + Math.random() * 15 + "px"; 
   petal.style.height = petal.style.width;
-
   const start = Date.now();
   const startX = parseFloat(petal.style.left);
   const drift = (Math.random() - 0.5) * 200; 
   const duration = 7000 + Math.random() * 3000; 
-
   function animate() {
     const elapsed = Date.now() - start;
     const progress = elapsed / duration;
@@ -206,94 +240,44 @@
       petal.remove();
       return;
     }
-
     const x = startX + Math.sin(progress * Math.PI * 2) * 50 + drift * progress;
     const y = progress * (window.innerHeight + 50);
     const rotate = progress * 360;
-
     petal.style.transform = `translate(${x}px, ${y}px) rotate(${rotate}deg)`;
     requestAnimationFrame(animate);
   }
-
   document.body.appendChild(petal);
   requestAnimationFrame(animate);
 }
 
-  let petalInterval = null; 
+let petalInterval = null; 
 
-  let voices = [];
-speechSynthesis.onvoiceschanged = () => {
-  voices = speechSynthesis.getVoices();
-};
+checkbox.addEventListener("change", function() {
+  if (this.checked) {
+    // ✅ Phát nhạc NGAY LẬP TỨC trong sự kiện click
+    loveSong.play().catch(err => console.log("Autoplay bị chặn:", err));
 
-function speak(text) {
-  const configs = [
-    { lang: 'ja-JP', pitch: 0.6 }, 
-    { lang: 'ko-KR', pitch: 0.5 }, 
-    { lang: 'zh-CN', pitch: 0.6 }, 
-    { lang: 'en-US', pitch: 0.5 }, 
-    { lang: 'vi-VN', pitch: 0.6 }  
-  ];
+    // ✅ Kích hoạt giọng nói đa ngôn ngữ ngay từ click đầu
+    speechSynthesis.cancel();
+    speakMulti("Anh yêu em");
 
-  configs.forEach(cfg => {
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = cfg.lang;
-    msg.pitch = cfg.pitch;
-    msg.rate = 1.0;
-    msg.volume = 1;
+    spinner.style.display = "block";
+    checkbox.style.display = "none";
 
-    let voice = voices.find(v => v.lang === cfg.lang) || voices.find(v => v.lang.startsWith(cfg.lang.split('-')[0]));
-    if (voice) msg.voice = voice;
-
-    speechSynthesis.speak(msg);
-  });
-}
-
-  function showLinesLoop() {
-    loveMessage.innerHTML = "";
-    let i = 0;
-    function nextLine() {
-      if (i < lines.length) {
-        const p = document.createElement("div");
-        p.className = "love-line";
-        p.textContent = lines[i];
-        loveMessage.appendChild(p);
-        speak(lines[i]);
-        setTimeout(nextLine, 3000);
-        i++;
-      } else {
-        setTimeout(() => {
-          loveMessage.innerHTML = "";
-          showLinesLoop();
-        }, 4000);
-      }
-    }
-    nextLine();
-  }
-
-  checkbox.addEventListener("change", function() {
-    if (this.checked) {
-      spinner.style.display = "block";
-      checkbox.style.display = "none";
+    setTimeout(() => {
+      spinner.style.display = "none";
+      checkmark.style.display = "block";
 
       setTimeout(() => {
-        spinner.style.display = "none";
-        checkmark.style.display = "block";
-
-        setTimeout(() => {
-          captchaBox.style.display = "none";
-          body.classList.add("romantic");
-          loveMessage.style.display = "block";
-          loveSong.play().catch(err => console.log("Autoplay bị chặn:", err));
-          showLinesLoop();
-
-          petalInterval = setInterval(createPetal, 300);
-
-        }, 800);
-
-      }, 2000);
-    }
-  });
+        captchaBox.style.display = "none";
+        body.classList.add("romantic");
+        loveMessage.style.display = "block";
+        showLinesLoop();
+        petalInterval = setInterval(createPetal, 300);
+      }, 800);
+    }, 2000);
+  }
+});
 </script>
 </body>
 </html>
