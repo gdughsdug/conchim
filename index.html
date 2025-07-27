@@ -184,11 +184,11 @@ speechSynthesis.onvoiceschanged = () => {
 // ✅ Đọc cùng 5 ngôn ngữ
 function speakMulti(text) {
   const configs = [
-    { lang: 'vi-VN', pitch: 1 },
-    { lang: 'ko-KR', pitch: 1 },
-    { lang: 'ja-JP', pitch: 1 },
-    { lang: 'zh-CN', pitch: 1 },
-    { lang: 'en-US', pitch: 1 }
+    { lang: 'vi-VN', pitch: 0.6 },
+    { lang: 'ko-KR', pitch: 0.5 },
+    { lang: 'ja-JP', pitch: 0.6 },
+    { lang: 'zh-CN', pitch: 0.5 },
+    { lang: 'en-US', pitch: 0.6 }
   ];
   configs.forEach(cfg => {
     const msg = new SpeechSynthesisUtterance(text);
